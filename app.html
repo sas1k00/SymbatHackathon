@@ -1,0 +1,650 @@
+<title>Founder Cup Anywhere</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: tournament desk. A sticky scoreboard header, one centred column, cups drawn as perforated entry tickets. */
+:root{
+  --bg:#F2F4F9; --surface:#FFFFFF; --ink:#0E1A33; --muted:#566178; --line:#D8DEEA;
+  --primary:#1B4DDB; --primary-ink:#FFFFFF; --gold:#B87A00; --gold-soft:#FFF1CC; --gold-ink:#3D2A00;
+  --good:#18794E; --good-soft:#DDF3E8; --warn:#B4400A; --warn-soft:#FDE7DA; --chip:#E6EBF6;
+  --display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --body:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0A1120; --surface:#121B31; --ink:#EAF0FF; --muted:#9DAAC6; --line:#27334F;
+  --primary:#7C9DFF; --primary-ink:#0A1120; --gold:#F2B92E; --gold-soft:#3A2E0B; --gold-ink:#FFE6A3;
+  --good:#4CC38A; --good-soft:#12301F; --warn:#FF9A62; --warn-soft:#3A1D0E; --chip:#1B2744; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0A1120; --surface:#121B31; --ink:#EAF0FF; --muted:#9DAAC6; --line:#27334F;
+  --primary:#7C9DFF; --primary-ink:#0A1120; --gold:#F2B92E; --gold-soft:#3A2E0B; --gold-ink:#FFE6A3;
+  --good:#4CC38A; --good-soft:#12301F; --warn:#FF9A62; --warn-soft:#3A1D0E; --chip:#1B2744; color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance;font-weight:700}
+h1{font-size:clamp(1.6rem,4.6vw,2.7rem);letter-spacing:-.01em}
+h2{font-size:clamp(1.1rem,2.6vw,1.45rem)}
+h3{font-size:1rem;font-weight:500}
+p{margin:0}
+a{color:var(--primary)}
+.muted{color:var(--muted)}
+.small{font-size:.875rem}
+.mono{font-family:var(--mono)}
+.num{font-variant-numeric:tabular-nums}
+:focus-visible{outline:3px solid var(--primary);outline-offset:2px;border-radius:6px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;padding-block:10px;flex-wrap:wrap}
+.brand{font-family:var(--display);font-weight:700;font-size:.95rem;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:8px;background:none;border:0;cursor:pointer;padding:0}
+.brand i{display:inline-block;width:22px;height:22px;border-radius:6px;background:var(--gold);position:relative}
+.brand i::after{content:"";position:absolute;inset:5px 6px 8px;border-radius:0 0 6px 6px;background:var(--surface)}
+.nav{display:flex;gap:4px;overflow-x:auto;min-width:0;flex:1}
+.nav button{background:none;border:0;font:inherit;color:var(--muted);padding:6px 10px;border-radius:8px;cursor:pointer;white-space:nowrap;font-weight:500}
+.nav button[aria-current="page"]{color:var(--ink);background:var(--chip)}
+.nav button:hover{color:var(--ink)}
+@media (max-width:640px){.nav{order:3;flex-basis:100%}.brand{flex:1}}
+.lang{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.lang button{background:none;border:0;font:inherit;font-size:.8rem;font-weight:600;padding:5px 9px;cursor:pointer;color:var(--muted)}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.ribbon{background:var(--gold-soft);color:var(--gold-ink);font-size:.8125rem;border-bottom:1px solid var(--line)}
+.ribbon .wrap{padding-block:6px}
+
+/* buttons */
+.btn{font:inherit;font-weight:600;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 16px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;justify-content:center}
+.btn:hover{border-color:var(--primary)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#fff}
+:root[data-theme="dark"] .btn.gold{color:#201500}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.gold{color:#201500}}
+.btn.sm{padding:6px 12px;font-size:.875rem}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* sections */
+main{padding-block:24px 56px;display:flex;flex-direction:column;gap:32px}
+section{display:flex;flex-direction:column;gap:14px;min-width:0}
+.head{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(270px,1fr))}
+.two{display:grid;gap:20px;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+@media (max-width:820px){.two{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.plain{display:flex;flex-direction:column;gap:6px;min-width:0}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--chip);color:var(--muted);white-space:nowrap}
+.tag.open{background:var(--good-soft);color:var(--good)}
+.tag.done{background:var(--gold-soft);color:var(--gold-ink)}
+.tag.warn{background:var(--warn-soft);color:var(--warn)}
+.lvl-gold{background:var(--gold-soft);color:var(--gold-ink)}
+.lvl-silver{background:var(--chip);color:var(--ink)}
+.lvl-bronze{background:var(--warn-soft);color:var(--warn)}
+
+/* hero */
+.hero{display:grid;gap:24px;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:center;padding-block:8px}
+@media (max-width:820px){.hero{grid-template-columns:minmax(0,1fr)}}
+.hero p.lead{font-size:1.0625rem;color:var(--muted);max-width:56ch}
+.eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+
+/* ticket */
+.ticket{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:grid;grid-template-columns:minmax(0,1fr) auto;min-width:0;text-align:left;color:inherit;font:inherit;padding:0;width:100%}
+button.ticket{cursor:pointer}
+button.ticket:hover{border-color:var(--primary)}
+.ticket .main{padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.ticket .stub{border-left:2px dashed var(--line);padding:14px 14px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px;min-width:104px}
+.ticket .stub b{font-family:var(--mono);font-size:1.05rem;letter-spacing:.08em}
+.ticket .stub span{font-size:.6875rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.ticket h3{overflow-wrap:anywhere}
+.bigcode{font-family:var(--mono);font-weight:700;font-size:clamp(1.5rem,5vw,2.2rem);letter-spacing:.14em;background:var(--ink);color:var(--surface);padding:8px 16px;border-radius:10px;display:inline-block}
+
+/* path */
+.path{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:720px){.path{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.path div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:4px;position:relative}
+.path div b{font-family:var(--display);font-size:.875rem}
+.path div em{font-style:normal;font-family:var(--mono);font-size:.75rem;color:var(--gold)}
+.path div:last-child{border-color:var(--gold)}
+
+/* tour */
+.tour{background:var(--surface);border:1px solid var(--primary);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px}
+.steps{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.steps button{font:inherit;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;color:var(--ink);display:flex;gap:10px;align-items:flex-start}
+.steps button:hover{border-color:var(--primary)}
+.steps .n{font-family:var(--mono);font-weight:700;width:24px;height:24px;border-radius:50%;background:var(--chip);display:flex;align-items:center;justify-content:center;flex:none;font-size:.8rem}
+.steps .ok .n{background:var(--good);color:#fff}
+.stat{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat div{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.stat b{font-family:var(--display);font-size:1.5rem;display:block;font-variant-numeric:tabular-nums}
+.stat span{font-size:.8125rem;color:var(--muted)}
+
+/* forms */
+form{display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-weight:600;font-size:.875rem}
+.field small{color:var(--muted);font-size:.8125rem}
+input[type=text],input[type=url],input[type=date],input[type=number],select,textarea{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+textarea{min-height:76px;resize:vertical}
+.f2{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.9rem}
+.check input{margin-top:4px;width:18px;height:18px;flex:none}
+input[type=range]{width:100%;accent-color:var(--primary)}
+
+/* pre-check */
+.meter{height:10px;border-radius:999px;background:var(--chip);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--primary);border-radius:999px}
+.meter.gold i{background:var(--gold)}
+.meter.good i{background:var(--good)}
+.score{font-family:var(--display);font-size:2rem;font-variant-numeric:tabular-nums}
+ul.chk{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:.875rem}
+ul.chk li{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:8px;align-items:start}
+ul.chk .y{color:var(--good);font-weight:700}
+ul.chk .n{color:var(--muted)}
+ul.chk small{color:var(--muted);display:block}
+
+/* tabs, tables */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{font:inherit;font-weight:600;background:none;border:0;border-bottom:3px solid transparent;padding:10px 12px;cursor:pointer;color:var(--muted);white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--primary)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;white-space:nowrap}
+td.r,th.r{text-align:right;font-variant-numeric:tabular-nums}
+tr.win td{background:var(--gold-soft);color:var(--gold-ink)}
+.vote{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+dl{margin:0;display:grid;gap:12px}
+dt{font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+dd{margin:2px 0 0;overflow-wrap:anywhere}
+.note{border-left:3px solid var(--gold);padding:8px 12px;background:var(--gold-soft);color:var(--gold-ink);border-radius:0 10px 10px 0;font-size:.875rem}
+.okmsg{border-left:3px solid var(--good);padding:10px 12px;background:var(--good-soft);color:var(--ink);border-radius:0 10px 10px 0}
+.copybox{font-family:var(--mono);font-size:.8125rem;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px;white-space:pre-wrap;overflow-wrap:anywhere;user-select:all}
+
+/* certificate */
+.cert{background:var(--surface);border:2px solid var(--gold);border-radius:var(--r);padding:clamp(18px,5vw,40px);display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center;max-width:720px;margin:0 auto;width:100%}
+.cert h1{font-size:clamp(1.3rem,4vw,2rem)}
+.cert .id{font-family:var(--mono);font-size:.875rem;border:1px dashed var(--line);padding:6px 12px;border-radius:8px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:999px;font-size:.9rem;z-index:20;max-width:90vw}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:.8125rem}
+footer .wrap{padding-block:16px;display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;align-items:center}
+.empty{border:1px dashed var(--line);border-radius:var(--r);padding:24px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
+</style>
+
+<header class="top"><div class="wrap">
+  <button class="brand" data-go="home"><i></i>Founder Cup Anywhere</button>
+  <nav class="nav" id="nav" aria-label="Main"></nav>
+  <div class="lang" role="group" aria-label="Language">
+    <button data-lang="ru" id="lang-ru">RU</button><button data-lang="en" id="lang-en">EN</button>
+  </div>
+</div></header>
+<div class="ribbon"><div class="wrap" id="ribbon"></div></div>
+<main class="wrap" id="app"></main>
+<footer><div class="wrap"><span id="foot"></span><button class="btn sm" data-act="reset" id="reset-btn"></button></div></footer>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+'use strict';
+var LS='fca-demo-v2', DAY=864e5, NOW=Date.now();
+function iso(o){return new Date(NOW+o*DAY).toISOString().slice(0,10)}
+var CN={KZ:['Казахстан','Kazakhstan'],UZ:['Узбекистан','Uzbekistan'],KG:['Кыргызстан','Kyrgyzstan'],AZ:['Азербайджан','Azerbaijan'],TR:['Турция','Türkiye'],XX:['Другая страна','Other country']};
+var OT={school:['Школа','School'],club:['Школьный клуб','School club'],college:['Колледж','College'],uni:['Вуз','University'],community:['IT-сообщество','IT community']};
+
+function seed(){
+  var cups=[
+   {code:'ALA7KQ',name:['Кубок лицея «Алатау»','Alatau Lyceum Cup'],org:['Лицей «Алатау»','Alatau Lyceum'],type:'school',city:['Алматы','Almaty'],country:'KZ',deadline:iso(9),final:iso(12),ages:'14–17',prize:['Грант 150 000 ₸ от спонсора и путёвка в городской финал','150,000 ₸ sponsor grant and a place in the city final'],winner:null},
+   {code:'AST4MX',name:['Кубок IT-клуба «Kod»','Kod IT Club Cup'],org:['IT-клуб «Kod»','Kod IT Club'],type:'community',city:['Астана','Astana'],country:'KZ',deadline:iso(-20),final:iso(-17),ages:'14–18',prize:['Ноутбук команде-победителю и путёвка в городской финал','A laptop for the winning team and a place in the city final'],winner:'b1'},
+   {code:'TSH9RW',name:['Кубок технического лицея Ташкента','Tashkent Tech Lyceum Cup'],org:['Технический лицей','Tech Lyceum'],type:'school',city:['Ташкент','Tashkent'],country:'UZ',deadline:iso(16),final:iso(19),ages:'14–17',prize:['Стажировка в IT-компании-партнёре','An internship at a partner IT company'],winner:null},
+   {code:'BSH3ZE',name:['Школьный кубок Бишкека','Bishkek School Startup Cup'],org:['Школа-гимназия «Ала-Тоо»','Ala-Too Gymnasium'],type:'school',city:['Бишкек','Bishkek'],country:'KG',deadline:iso(-34),final:iso(-31),ages:'13–17',prize:['Путёвка в национальный финал','A place in the national final'],winner:'d1'},
+   {code:'SHM5HY',name:['Кубок колледжа «Сайрам»','Sairam College Cup'],org:['Колледж «Сайрам»','Sairam College'],type:'college',city:['Шымкент','Shymkent'],country:'KZ',deadline:iso(23),final:iso(26),ages:'15–19',prize:['Призовой фонд от местного бизнеса','Prize fund from local businesses'],winner:null},
+   {code:'BAK8PN',name:['Кубок молодых фаундеров Баку','Baku Young Founders Cup'],org:['Сообщество Young Founders','Young Founders community'],type:'community',city:['Баку','Baku'],country:'AZ',deadline:iso(30),final:iso(33),ages:'14–18',prize:['Менторская сессия и путёвка в национальный финал','A mentoring session and a place in the national final'],winner:null}
+  ];
+  function P(id,cup,title,team,members,votes,jury,link,pr,au,so,ev){return {id:id,cup:cup,title:title,team:team,members:members,votes:votes,jury:jury,link:link,problem:pr,audience:au,solution:so,evidence:ev,status:'published',consent:true}}
+  var projects=[
+   P('a1','ALA7KQ','QalaBus','Team Tulpar',4,64,null,'https://example.org/qalabus',
+     ['42 из 60 опрошенных учеников нашего лицея ждут школьный автобус дольше 15 минут и не знают, где он едет.','42 of 60 surveyed students at our lyceum wait for the school bus for over 15 minutes and do not know where it is.'],
+     ['Ученики 5–11 классов и их родители в Алматы, у которых школа дальше 3 км от дома.','Students in grades 5–11 and their parents in Almaty who live more than 3 km from school.'],
+     ['Водитель включает трекер в телефоне. Ученики видят автобус на карте и получают уведомление за 5 минут до прибытия.','The driver turns on a tracker on their phone. Students see the bus on a map and get a notification 5 minutes before it arrives.'],
+     ['Опросили 60 учеников, 5 дней тестировали на одном автобусе, 31 установка приложения.','Surveyed 60 students, tested on one bus for 5 days, 31 app installs.']),
+   P('a2','ALA7KQ','SwapShelf','Kitap Crew',3,51,null,'https://example.org/swapshelf',
+     ['В конце года 9 из 10 учеников выбрасывают или хранят без дела рабочие тетради и пособия, а младшие классы покупают их заново.','At the end of the year 9 of 10 students throw away or shelve their workbooks, while younger grades buy them again.'],
+     ['Ученики 7–11 классов и родители одной школы.','Students in grades 7–11 and parents at one school.'],
+     ['Школьная страница обмена: ученик выкладывает пособие, младший класс бронирует его и забирает в библиотеке.','A school exchange page: a student lists a workbook, a younger student reserves it and picks it up at the library.'],
+     ['За 2 недели выложили 48 пособий, 19 уже обменяли.','In 2 weeks, 48 workbooks were listed and 19 exchanged.']),
+   P('a3','ALA7KQ','Dombyra Tuner','Shanyraq',2,38,null,'',
+     ['Начинающим сложно настроить домбру на слух, обычные тюнеры рассчитаны на гитару и показывают неверные ноты.','Beginners struggle to tune a dombyra by ear, and standard tuners are built for guitars and show the wrong notes.'],
+     ['Ученики музыкальных школ и кружков, 10–16 лет.','Music school and club students, ages 10–16.'],
+     ['Приложение слушает струну через микрофон и показывает, куда крутить колок. Есть 5 коротких уроков.','The app listens to the string through the microphone and shows which way to turn the peg. It includes 5 short lessons.'],
+     ['Показали прототип 12 ученикам кружка, 9 настроили инструмент сами.','Showed the prototype to 12 club students, 9 tuned their instrument on their own.']),
+   P('a4','ALA7KQ','Study Buddy','Team Zerde',3,22,null,'',
+     ['Готовиться к экзаменам одному скучно, многие бросают подготовку уже через пару недель.','Preparing for exams alone is boring, and many give up after a couple of weeks.'],
+     ['Старшеклассники перед экзаменами.','High school students before exams.'],
+     ['Сервис подбирает напарника по предмету и уровню, вместе они ставят цели на неделю.','The service matches a study partner by subject and level, and together they set weekly goals.'],
+     ['Спросили одноклассников, идея им нравится.','Asked classmates, they like the idea.']),
+   P('b1','AST4MX','EcoBox','Jasyl Team',4,97,[9,8,9],'https://example.org/ecobox',
+     ['В нашей школе за неделю выбрасывают около 300 пластиковых бутылок, и ни одна не идёт в переработку.','About 300 plastic bottles are thrown away at our school each week, and none are recycled.'],
+     ['Школы Астаны с 500+ учениками и их столовые.','Schools in Astana with 500+ students and their canteens.'],
+     ['Контейнер с датчиком считает бутылки по классам. Класс-лидер месяца получает приз от партнёра по переработке.','A container with a sensor counts bottles by class. The top class each month gets a prize from the recycling partner.'],
+     ['Собрали прототип, за 3 недели в одной школе собрано 740 бутылок.','Built a prototype; 740 bottles were collected at one school in 3 weeks.']),
+   P('b2','AST4MX','TutorMatch','Bilim Bros',3,71,[8,7,7],'https://example.org/tutormatch',
+     ['Репетитор стоит от 5 000 ₸ за час, и семьи учеников 5–7 классов часто не могут его себе позволить.','A tutor costs from 5,000 ₸ per hour, and families of students in grades 5–7 often cannot afford one.'],
+     ['Ученики 5–7 классов и старшеклассники 10–11 классов одной школы.','Students in grades 5–7 and high school students in grades 10–11 at one school.'],
+     ['Старшеклассники занимаются с младшими за волонтёрские часы, школа подтверждает их в характеристике.','High school students tutor younger ones for volunteer hours, which the school confirms in their reference.'],
+     ['Провели 26 занятий за месяц, 14 пар продолжают заниматься.','Held 26 sessions in a month; 14 pairs are still working together.']),
+   P('b3','AST4MX','LostFound','404 Found',2,40,[6,6,7],'',
+     ['В школе теряют вещи каждый день, коробка находок переполнена, найти своё почти невозможно.','Things get lost at school every day, the lost-and-found box overflows, and finding your item is nearly impossible.'],
+     ['Ученики и родители школ с 800+ учениками.','Students and parents at schools with 800+ students.'],
+     ['Дежурный фотографирует находку, она появляется в школьном Telegram-боте с местом и датой.','The student on duty photographs the item, and it appears in the school Telegram bot with place and date.'],
+     ['Бот работает 2 недели, вернули 17 вещей из 45.','The bot has run for 2 weeks; 17 of 45 items were returned.']),
+   P('c1','TSH9RW','Suvchi','Aqua Team',3,45,null,'https://example.org/suvchi',
+     ['В нашей школе краны в туалетах часто остаются открытыми, за день мы насчитали 14 таких случаев.','Taps in our school toilets are often left running; we counted 14 cases in one day.'],
+     ['Школы и лицеи Ташкента, завхозы и администрация.','Schools and lyceums in Tashkent, facility managers and administration.'],
+     ['Недорогой датчик на кране сообщает завхозу в Telegram, если вода течёт дольше 3 минут.','A low-cost tap sensor alerts the facility manager on Telegram if water runs for more than 3 minutes.'],
+     ['Собрали 2 датчика на Arduino, неделю тестировали на одном этаже.','Built 2 Arduino sensors and tested them on one floor for a week.']),
+   P('c2','TSH9RW','MahallaJob','Yosh Kuch',4,33,null,'',
+     ['Подросткам 15–17 лет трудно найти безопасную подработку на лето рядом с домом.','Teenagers aged 15–17 find it hard to get safe summer work close to home.'],
+     ['Школьники 15–17 лет и малый бизнес в махалле.','Students aged 15–17 and small businesses in the mahalla.'],
+     ['Доска коротких заданий от проверенных соседей и магазинов: помощь на складе, раздача листовок, уход за садом.','A board of short jobs from verified neighbours and shops: stockroom help, flyers, gardening.'],
+     ['Опросили 35 школьников и 8 магазинов, 5 магазинов готовы разместить задания.','Surveyed 35 students and 8 shops; 5 shops are ready to post jobs.']),
+   P('d1','BSH3ZE','Too Trail','Ala-Too Hikers',4,88,[9,9,8],'https://example.org/tootrail',
+     ['Школьные походы в горы планируют по устным советам, в прошлом году 3 группы нашей школы сбились с маршрута.','School hikes are planned by word of mouth; last year 3 groups from our school lost the trail.'],
+     ['Учителя и ученики 8–11 классов в Бишкеке, которые ходят в однодневные походы.','Teachers and students in grades 8–11 in Bishkek who go on day hikes.'],
+     ['Карта проверенных однодневных маршрутов с уровнем сложности, временем и точками связи. Работает без интернета.','A map of verified day routes with difficulty, duration and signal points. Works offline.'],
+     ['Описали 11 маршрутов, 4 класса прошли по ним в сентябре.','Documented 11 routes; 4 classes hiked them in September.']),
+   P('d2','BSH3ZE','KyrgyzSign','Open Hands',3,59,[8,7,8],'',
+     ['В нашем классе учится слабослышащий одноклассник, и почти никто из 28 учеников не знает жестов.','We have a hard-of-hearing classmate, and almost none of our 28 classmates know any signs.'],
+     ['Ученики 5–11 классов инклюзивных школ.','Students in grades 5–11 at inclusive schools.'],
+     ['Тренажёр из коротких видео: 5 жестов в день, проверка через камеру телефона.','A trainer made of short videos: 5 signs a day, checked through the phone camera.'],
+     ['Записали 60 жестов, 15 одноклассников занимаются 2 недели.','Recorded 60 signs; 15 classmates have practised for 2 weeks.']),
+   P('e1','BAK8PN','Cay Break','Novbe',3,27,null,'',
+     ['На большой перемене очередь в столовой занимает 12 из 20 минут, многие не успевают поесть.','During the long break the canteen queue takes 12 of 20 minutes, and many students do not manage to eat.'],
+     ['Ученики 8–11 классов и школьные столовые Баку.','Students in grades 8–11 and school canteens in Baku.'],
+     ['Ученик заказывает обед до перемены и забирает готовый пакет в отдельном окне.','A student orders lunch before the break and picks up a ready bag at a separate window.'],
+     ['Замеряли очередь 5 дней, опросили 40 учеников.','Timed the queue for 5 days and surveyed 40 students.'])
+  ];
+  return {v:2,lang:'ru',cups:cups,projects:projects,voted:{},tour:{},seq:1};
+}
+var S;
+try{var raw=localStorage.getItem(LS); if(raw){S=JSON.parse(raw)}}catch(e){}
+if(!S||S.v!==2) S=seed();
+function save(){try{localStorage.setItem(LS,JSON.stringify(S))}catch(e){}}
+
+/* helpers */
+function tr(ru,en){return S.lang==='en'?en:ru}
+function L(v){return Array.isArray(v)?v[S.lang==='en'?1:0]:(v==null?'':v)}
+function R(v){return Array.isArray(v)?v[0]:(v||'')}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function E(v){return esc(L(v))}
+function pl(n,one,few,many,en1,enN){if(S.lang==='en')return n===1?en1:enN;var a=Math.abs(n)%100,b=a%10;return (a>10&&a<20)?many:b===1?one:(b>=2&&b<=4)?few:many}
+function PR(n){return pl(n,'проект','проекта','проектов','project','projects')}
+function PP(n){return pl(n,'опубликованный проект','опубликованных проекта','опубликованных проектов','published project','published projects')}
+function VT(n){return pl(n,'голос','голоса','голосов','vote','votes')}
+function nf(n){return Number(n).toLocaleString(S.lang==='en'?'en-US':'ru-RU')}
+function fd(d){return new Date(d+'T12:00:00').toLocaleDateString(S.lang==='en'?'en-GB':'ru-RU',{day:'numeric',month:'short'})}
+function cup(code){return S.cups.filter(function(c){return c.code===code})[0]}
+function proj(id){return S.projects.filter(function(p){return p.id===id})[0]}
+function cupProjects(code,all){return S.projects.filter(function(p){return p.cup===code&&(all||p.status==='published')})}
+function daysLeft(d){return Math.ceil((new Date(d+'T23:59:59').getTime()-NOW)/DAY)}
+function cupStatus(c){if(c.winner)return 'done'; if(daysLeft(c.deadline)>=0)return 'open'; return 'final'}
+function statusTag(c){var s=cupStatus(c);
+  if(s==='done')return '<span class="tag done">'+tr('Победитель объявлен','Winner announced')+'</span>';
+  if(s==='open')return '<span class="tag open">'+tr('Приём проектов','Open for projects')+'</span>';
+  return '<span class="tag warn">'+tr('Ждёт решения жюри','Awaiting jury')+'</span>'}
+
+function precheck(p){
+  var t=R(p.title).trim(),pr=R(p.problem).trim(),au=R(p.audience).trim(),so=R(p.solution).trim(),ev=R(p.evidence).trim(),ln=(p.link||'').trim(),D=/\d/;
+  var items=[
+   [t.length>=3&&t.length<=40,5,tr('Название от 3 до 40 знаков','Title is 3–40 characters'),tr('Дайте проекту короткое название.','Give the project a short name.')],
+   [pr.length>=60,15,tr('Проблема описана подробно','Problem is described in detail'),tr('Опишите в 1–2 предложениях, у кого проблема и когда она возникает.','In 1–2 sentences, say who has the problem and when it happens.')],
+   [D.test(pr),10,tr('В проблеме есть число','Problem includes a number'),tr('Добавьте число: сколько людей с этим столкнулись?','Add a number: how many people face this?')],
+   [au.length>=25,10,tr('Аудитория названа конкретно','Audience is specific'),tr('Напишите, кто именно: возраст, класс, город.','Say exactly who: age, grade, city.')],
+   [D.test(au)||/класс|лет|grade|age|year/i.test(au),10,tr('Указан возраст или класс','Age or grade is given'),tr('Уточните возраст или класс вашей аудитории.','Specify the age or grade of your audience.')],
+   [so.length>=60,15,tr('Решение объяснено','Solution is explained'),tr('Объясните по шагам, как это работает.','Explain step by step how it works.')],
+   [ev.length>=30,15,tr('Есть доказательство работы','There is proof of work'),tr('Что вы уже сделали? Опрос, прототип, тест.','What have you done so far? A survey, a prototype, a test.')],
+   [D.test(ev),10,tr('В доказательстве есть результат в цифрах','Proof includes a result in numbers'),tr('Добавьте результат: сколько человек опросили или попробовали?','Add a result: how many people did you survey or test with?')],
+   [/^https?:\/\/\S+\.\S+/.test(ln),10,tr('Есть ссылка на прототип или видео','Link to a prototype or video'),tr('Добавьте ссылку на прототип, макет или видео.','Add a link to a prototype, mock-up or video.')]
+  ];
+  var score=0; items.forEach(function(i){if(i[0])score+=i[1]});
+  return {score:score,items:items};
+}
+var GATE=50;
+function level(sc){return sc>=80?['gold','Gold']:sc>=65?['silver','Silver']:sc>=GATE?['bronze','Bronze']:null}
+function lvlTag(sc){var l=level(sc);return l?'<span class="tag lvl-'+l[0]+'">'+l[1]+' · '+sc+'</span>':'<span class="tag">'+tr('Черновик','Draft')+' · '+sc+'</span>'}
+function juryAvg(p){return p.jury?Math.round((p.jury[0]+p.jury[1]+p.jury[2])/3*10):0}
+function total(p){return Math.round(0.5*juryAvg(p)+0.3*precheck(p).score+0.2*Math.min(p.votes,100))}
+function ranked(code){return cupProjects(code).slice().sort(function(a,b){return total(b)-total(a)||b.votes-a.votes})}
+function place(p){var r=ranked(p.cup);for(var i=0;i<r.length;i++)if(r[i].id===p.id)return i+1;return 0}
+function certId(p){return 'FCA-'+p.cup+'-'+p.id.toUpperCase()}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){t.hidden=true},2200)}
+function copy(text){var done=function(){toast(tr('Скопировано','Copied'))};
+  try{navigator.clipboard.writeText(text).then(done,function(){toast(tr('Выделите текст и скопируйте вручную','Select the text and copy it manually'))})}
+  catch(e){toast(tr('Выделите текст и скопируйте вручную','Select the text and copy it manually'))}}
+
+/* routing */
+var route='home', cupTab='projects', flash='';
+function go(r){route=r;try{if(location.hash.slice(1)!==r)location.hash=r}catch(e){} render(); window.scrollTo(0,0)}
+window.addEventListener('hashchange',function(){var h=location.hash.slice(1);if(h&&h!==route){route=h;render()}});
+
+/* shared pieces */
+function ticket(c,asButton){
+  var n=cupProjects(c.code).length, dl=daysLeft(c.deadline);
+  var inner='<div class="main"><div class="row">'+statusTag(c)+'<span class="tag">'+E(OT[c.type])+'</span></div><h3>'+E(c.name)+'</h3>'+
+   '<p class="small muted">'+E(c.org)+' · '+E(c.city)+', '+E(CN[c.country])+'</p>'+
+   '<p class="small num">'+nf(n)+' '+PR(n)+' · '+(cupStatus(c)==='open'?tr('до дедлайна ','deadline in ')+dl+tr(' дн.',' days'):tr('финал ','final ')+fd(c.final))+'</p></div>'+
+   '<div class="stub"><span>'+tr('код','code')+'</span><b>'+esc(c.code)+'</b></div>';
+  return asButton?'<button class="ticket" data-go="cup-'+esc(c.code)+'" aria-label="'+E(c.name)+'">'+inner+'</button>':'<div class="ticket">'+inner+'</div>';
+}
+function pathHtml(){
+  var st=[[tr('Школьный кубок','School cup'),tr('Любой учитель или клуб, 10 минут на запуск','Any teacher or club, 10 minutes to launch'),'01'],
+          [tr('Городской финал','City final'),tr('Победители школьных кубков города','Winners of the city\'s school cups'),'02'],
+          [tr('Национальный финал','National final'),tr('Лучшие команды страны, жюри и спонсоры','The country\'s best teams, jury and sponsors'),'03'],
+          [tr('Международный финал','International final'),tr('Сборные стран и витрина AI Startify','National teams and the AI Startify showcase'),'04']];
+  return '<div class="path">'+st.map(function(s){return '<div><em>'+s[2]+'</em><b>'+s[0]+'</b><span class="small muted">'+s[1]+'</span></div>'}).join('')+'</div>';
+}
+function projectCard(p){
+  var sc=precheck(p).score, c=cup(p.cup), win=c&&c.winner===p.id;
+  return '<div class="card"><div class="row">'+lvlTag(sc)+(win?'<span class="tag done">'+tr('Победитель','Winner')+'</span>':'')+'</div>'+
+   '<h3>'+E(p.title)+'</h3><p class="small muted">'+E(p.team)+' · '+p.members+' '+tr('чел.','members')+'</p>'+
+   '<p class="small clamp">'+E(p.solution)+'</p>'+
+   '<div class="vote"><span class="num"><b>'+nf(p.votes)+'</b> '+VT(p.votes)+'</span><span class="row">'+
+   '<button class="btn sm" data-act="vote" data-id="'+p.id+'"'+(S.voted[p.id]?' disabled':'')+'>'+(S.voted[p.id]?tr('Голос учтён','Voted'):tr('Голосовать','Vote'))+'</button>'+
+   '<button class="btn sm" data-go="project-'+p.id+'">'+tr('Открыть','Open')+'</button></span></div></div>';
+}
+
+/* views */
+function vHome(){
+  var pub=S.projects.filter(function(p){return p.status==='published'}), countries={}, votes=0;
+  S.cups.forEach(function(c){countries[c.country]=1}); pub.forEach(function(p){votes+=p.votes});
+  var T=S.tour, mine=S.cups.filter(function(c){return c.mine})[0], first=S.cups.filter(function(c){return cupStatus(c)==='open'})[0];
+  var steps=[
+   [T.created,tr('Запустите кубок','Launch a cup'),tr('Форма на 10 минут, код и страница кубка','A 10-minute form, a code and a cup page'),'create'],
+   [T.published,tr('Опубликуйте проект','Publish a project'),tr('Войдите по коду ALA7KQ, пройдите предпроверку','Join with code ALA7KQ and pass the pre-check'),'join'],
+   [T.voted,tr('Проголосуйте','Vote'),tr('Один голос за проект, голоса ограничены в зачёте','One vote per project; votes are capped in scoring'),'cup-ALA7KQ'],
+   [T.judged,tr('Оцените как жюри','Score as the jury'),tr('Три критерия, объявление победителя','Three criteria, then announce the winner'),'jury'],
+   [T.cert,tr('Откройте сертификат','Open a certificate'),tr('Код проверки и путёвка в следующий этап','A verification code and a ticket to the next stage'),'cert-b1']
+  ];
+  return '<section class="hero"><div class="plain" style="gap:16px">'+
+   '<span class="eyebrow">'+tr('Конкурс под ключ для любой школы','A turnkey contest for any school')+'</span>'+
+   '<h1>'+tr('Кубок стартапов в вашей школе. Запуск за 10 минут.','A startup cup at your school. Launched in 10 minutes.')+'</h1>'+
+   '<p class="lead">'+tr('Учитель, клуб или вуз создаёт свой кубок. Каждая команда публикует проект, чтобы участвовать. Победитель идёт в городской, национальный и международный финал.','A teacher, club or university creates its own cup. Every team publishes a project to take part. The winner moves on to the city, national and international finals.')+'</p>'+
+   '<div class="row"><button class="btn primary" data-go="create">'+tr('Запустить кубок','Launch a cup')+'</button><button class="btn" data-go="join">'+tr('Войти по коду','Join with a code')+'</button></div></div>'+
+   '<div class="plain" style="gap:10px">'+(first?ticket(first,true):'')+'<p class="small muted">'+tr('Так выглядит билет кубка. Код на корешке открывает командам вход.','This is a cup ticket. The code on the stub lets teams in.')+'</p></div></section>'+
+
+   '<section class="tour"><div class="head"><h2>'+tr('Пройдите демо за 2 минуты','Walk through the demo in 2 minutes')+'</h2><span class="small muted">'+tr('Пять шагов, каждый кликабелен','Five steps, each one is clickable')+'</span></div>'+
+   '<div class="steps">'+steps.map(function(s,i){return '<button class="'+(s[0]?'ok':'')+'" data-go="'+(s[3]==='jury'?'cup-'+((mine&&mine.code)||'ALA7KQ'):s[3])+'"'+(s[3]==='jury'?' data-tab="jury"':'')+'><span class="n">'+(s[0]?'✓':i+1)+'</span><span><b>'+s[1]+'</b><br><span class="small muted">'+s[2]+'</span></span></button>'}).join('')+'</div></section>'+
+
+   '<section><div class="head"><h2>'+tr('Путь команды','The team\'s path')+'</h2><button class="btn sm" data-go="league">'+tr('Лига и рейтинг школ','League and school ranking')+'</button></div>'+pathHtml()+'</section>'+
+
+   '<section><h2>'+tr('Демо-лига сейчас','The demo league right now')+'</h2><div class="stat">'+
+   '<div><b>'+nf(S.cups.length)+'</b><span>'+pl(S.cups.length,'кубок','кубка','кубков','cup','cups')+'</span></div>'+
+   '<div><b>'+nf(Object.keys(countries).length)+'</b><span>'+pl(Object.keys(countries).length,'страна','страны','стран','country','countries')+'</span></div>'+
+   '<div><b>'+nf(pub.length)+'</b><span>'+PP(pub.length)+'</span></div>'+
+   '<div><b>'+nf(votes)+'</b><span>'+pl(votes,'голос зрителей','голоса зрителей','голосов зрителей','audience vote','audience votes')+'</span></div></div></section>'+
+
+   '<section><h2>'+tr('Почему это сработает','Why this will work')+'</h2><div class="grid">'+
+   '<div class="plain"><h3>'+tr('Конкурсы уже дают всплески','Contests already cause spikes')+'</h3><p class="small muted">'+tr('160 публикаций в июле и 110 в октябре пришлись на месяцы конкурсов. Это наблюдение нашей команды по датам витрины, а не данные платформы.','160 publications in July and 110 in October fell in contest months. This is our team\'s observation from showcase dates, not platform data.')+'</p></div>'+
+   '<div class="plain"><h3>'+tr('Регистрация ещё не проект','A sign-up is not a project yet')+'</h3><p class="small muted">'+tr('По брифу хакатона у AI Startify 4 000+ пользователей и 567+ проектов, около 14%. В кубке публикация проекта служит входным билетом.','Per the hackathon brief AI Startify has 4,000+ users and 567+ projects, about 14%. In a cup, publishing a project is the entry ticket.')+'</p></div>'+
+   '<div class="plain"><h3>'+tr('Растёт числом организаторов','Grows with the number of organisers')+'</h3><p class="small muted">'+tr('Центр не организует каждый конкурс вручную. Бренд один, организаторов сотни, аудиторию и призы они приводят сами.','The centre does not run every contest by hand. One brand, hundreds of organisers who bring their own audience and prizes.')+'</p></div>'+
+   '</div><div class="row"><button class="btn sm" data-go="impact">'+tr('Посчитать путь к 10 000 проектов','Calculate the path to 10,000 projects')+'</button></div></section>'+
+
+   '<section><div class="head"><h2>'+tr('Кубки','Cups')+'</h2><button class="btn sm" data-go="cups">'+tr('Все кубки','All cups')+'</button></div><div class="grid">'+S.cups.slice(0,3).map(function(c){return ticket(c,true)}).join('')+'</div></section>';
+}
+
+var cupFilter='ALL';
+function vCups(){
+  var keys=['ALL'].concat(Object.keys(CN).filter(function(k){return S.cups.some(function(c){return c.country===k})}));
+  var list=S.cups.filter(function(c){return cupFilter==='ALL'||c.country===cupFilter});
+  return '<section><div class="head"><h1>'+tr('Кубки','Cups')+'</h1><button class="btn primary" data-go="create">'+tr('Запустить кубок','Launch a cup')+'</button></div>'+
+   '<div class="row">'+keys.map(function(k){return '<button class="btn sm" data-act="filter" data-k="'+k+'"'+(cupFilter===k?' style="border-color:var(--primary)"':'')+'>'+(k==='ALL'?tr('Все страны','All countries'):E(CN[k]))+'</button>'}).join('')+'</div>'+
+   '<div class="grid">'+list.map(function(c){return ticket(c,true)}).join('')+'</div></section>';
+}
+
+function vJoin(){
+  return '<section style="max-width:560px"><h1>'+tr('Вход по коду кубка','Join with a cup code')+'</h1>'+
+   '<p class="muted">'+tr('Код из 6 знаков даёт организатор: учитель, куратор клуба или сообщество.','The 6-character code comes from the organiser: a teacher, club lead or community.')+'</p>'+
+   '<form id="join-form"><div class="field"><label for="join-code">'+tr('Код кубка','Cup code')+'</label>'+
+   '<input type="text" id="join-code" class="mono" maxlength="6" autocomplete="off" placeholder="ALA7KQ" style="text-transform:uppercase;letter-spacing:.14em;font-size:1.25rem"></div>'+
+   '<div class="row"><button class="btn primary" type="submit">'+tr('Найти кубок','Find the cup')+'</button></div><p class="small" id="join-err" style="color:var(--warn)" hidden></p></form>'+
+   '<div class="note">'+tr('Для демо попробуйте коды ','For the demo try codes ')+S.cups.filter(function(c){return cupStatus(c)==='open'}).slice(0,3).map(function(c){return '<b class="mono">'+c.code+'</b>'}).join(', ')+'.</div></section>';
+}
+
+function vCreate(){
+  var d1=iso(21), d2=iso(24);
+  return '<section><h1>'+tr('Запуск кубка','Launch a cup')+'</h1><p class="muted">'+tr('Одна форма. После отправки вы получите код, страницу кубка и набор организатора.','One form. After you submit it you get a code, a cup page and an organiser kit.')+'</p></section>'+
+  '<div class="two"><form id="create-form" class="card">'+
+   '<div class="field"><label for="c-name">'+tr('Название кубка','Cup name')+'</label><input type="text" id="c-name" required maxlength="60" placeholder="'+tr('Кубок школы №… ','School Cup …')+'"></div>'+
+   '<div class="f2"><div class="field"><label for="c-org">'+tr('Организация','Organisation')+'</label><input type="text" id="c-org" required maxlength="60" placeholder="'+tr('Школа, клуб, вуз','School, club, university')+'"></div>'+
+   '<div class="field"><label for="c-type">'+tr('Тип организатора','Organiser type')+'</label><select id="c-type">'+Object.keys(OT).map(function(k){return '<option value="'+k+'">'+E(OT[k])+'</option>'}).join('')+'</select></div></div>'+
+   '<div class="f2"><div class="field"><label for="c-city">'+tr('Город','City')+'</label><input type="text" id="c-city" required maxlength="40"></div>'+
+   '<div class="field"><label for="c-country">'+tr('Страна','Country')+'</label><select id="c-country">'+Object.keys(CN).map(function(k){return '<option value="'+k+'">'+E(CN[k])+'</option>'}).join('')+'</select></div></div>'+
+   '<div class="f2"><div class="field"><label for="c-deadline">'+tr('Дедлайн публикации','Publishing deadline')+'</label><input type="date" id="c-deadline" required value="'+d1+'"></div>'+
+   '<div class="field"><label for="c-final">'+tr('Дата финала','Final date')+'</label><input type="date" id="c-final" required value="'+d2+'"></div>'+
+   '<div class="field"><label for="c-ages">'+tr('Возраст участников','Participant ages')+'</label><input type="text" id="c-ages" value="14–17" maxlength="12"></div></div>'+
+   '<div class="field"><label for="c-prize">'+tr('Приз','Prize')+'</label><input type="text" id="c-prize" maxlength="120" placeholder="'+tr('Например: грант от спонсора, стажировка','For example: a sponsor grant, an internship')+'"><small>'+tr('Приз даёт школа или спонсор. Путёвка в следующий этап добавляется автоматически.','The prize comes from the school or a sponsor. A ticket to the next stage is added automatically.')+'</small></div>'+
+   '<label class="check"><input type="checkbox" id="c-consent" required><span>'+tr('Я представляю организацию. Мы собираем согласие родителей для участников младше 18 лет.','I represent the organisation. We collect parental consent for participants under 18.')+'</span></label>'+
+   '<div class="row"><button class="btn primary" type="submit">'+tr('Создать кубок и получить код','Create the cup and get a code')+'</button></div></form>'+
+   '<div class="plain" style="gap:14px"><h3>'+tr('Что получает организатор','What the organiser gets')+'</h3>'+
+   '<ul class="chk"><li><span class="y">✓</span><span>'+tr('Страница кубка, код и текст приглашения','A cup page, a code and an invitation text')+'</span></li>'+
+   '<li><span class="y">✓</span><span>'+tr('План на 4 недели и чек-лист','A 4-week plan and a checklist')+'</span></li>'+
+   '<li><span class="y">✓</span><span>'+tr('Предпроверка проектов и панель жюри','Project pre-check and a jury panel')+'</span></li>'+
+   '<li><span class="y">✓</span><span>'+tr('Сертификаты командам и сертификат организатора','Certificates for teams and an organiser certificate')+'</span></li>'+
+   '<li><span class="y">✓</span><span>'+tr('Место школы в рейтинге лиги','A place for the school in the league ranking')+'</span></li></ul>'+
+   '<div class="note">'+tr('Организаторам не платят за проведение. Призы приходят от школы и спонсоров, платформа даёт инструменты.','Organisers are not paid to run a cup. Prizes come from the school and sponsors; the platform provides the tools.')+'</div></div></div>';
+}
+
+function vCup(code){
+  var c=cup(code); if(!c) return vNotFound();
+  var list=ranked(code), st=cupStatus(c), dl=daysLeft(c.deadline), mineDraft=cupProjects(code,true).filter(function(p){return p.mine&&p.status==='draft'})[0];
+  var tabs=[['projects',tr('Проекты','Projects')+' · '+list.length],['rank',tr('Рейтинг','Ranking')],['jury',tr('Жюри','Jury')],['org',tr('Организатору','For the organiser')]];
+  var body='';
+  if(cupTab==='projects'){
+    body=list.length?'<div class="grid">'+list.map(projectCard).join('')+'</div>':
+      '<div class="empty"><b>'+tr('Пока нет проектов','No projects yet')+'</b><span>'+tr('Станьте первой командой этого кубка.','Be the first team in this cup.')+'</span>'+(st==='open'?'<button class="btn primary" data-go="submit-'+code+'">'+tr('Подать проект','Submit a project')+'</button>':'')+'</div>';
+  } else if(cupTab==='rank'){
+    body='<p class="small muted">'+tr('Итог = 50% жюри + 30% предпроверка + 20% голоса (в зачёт идёт не больше 100 голосов). Пока жюри не оценило, балл предварительный.','Total = 50% jury + 30% pre-check + 20% votes (at most 100 votes count). Until the jury scores, the total is provisional.')+'</p>'+
+     (list.length?'<div class="scroll"><table><thead><tr><th>#</th><th>'+tr('Проект','Project')+'</th><th class="r">'+tr('Предпроверка','Pre-check')+'</th><th class="r">'+tr('Голоса','Votes')+'</th><th class="r">'+tr('Жюри','Jury')+'</th><th class="r">'+tr('Итог','Total')+'</th></tr></thead><tbody>'+
+     list.map(function(p,i){return '<tr class="'+(c.winner===p.id?'win':'')+'"><td class="num">'+(i+1)+'</td><td><button class="btn sm" data-go="project-'+p.id+'">'+E(p.title)+'</button><div class="small muted">'+E(p.team)+'</div></td><td class="r">'+precheck(p).score+'</td><td class="r">'+nf(p.votes)+'</td><td class="r">'+(p.jury?juryAvg(p):'—')+'</td><td class="r"><b>'+total(p)+'</b></td></tr>'}).join('')+'</tbody></table></div>':'<div class="empty">'+tr('Рейтинг появится после первой публикации.','The ranking appears after the first publication.')+'</div>');
+  } else if(cupTab==='jury'){
+    body='<div class="note">'+tr('В демо панель жюри открыта всем. В продукте её видят только организатор и приглашённые члены жюри.','In the demo the jury panel is open to everyone. In the product only the organiser and invited jurors see it.')+'</div>'+
+     (c.winner?'<div class="okmsg"><b>'+tr('Победитель: ','Winner: ')+E(proj(c.winner).title)+'</b>. '+tr('Команда получила путёвку в городской финал.','The team received a ticket to the city final.')+' <button class="btn sm" data-go="cert-'+c.winner+'">'+tr('Сертификат','Certificate')+'</button></div>':'')+
+     (list.length?list.map(function(p){var j=p.jury||[5,5,5];var cr=[tr('Проблема','Problem'),tr('Решение','Solution'),tr('Доказательства','Evidence')];
+       return '<div class="card"><div class="head"><div><h3>'+E(p.title)+'</h3><span class="small muted">'+E(p.team)+' · '+tr('предпроверка ','pre-check ')+precheck(p).score+'</span></div>'+(p.jury?'<span class="tag open">'+tr('Оценено','Scored')+' · '+juryAvg(p)+'</span>':'<span class="tag">'+tr('Без оценки','Not scored')+'</span>')+'</div>'+
+       '<div class="f2">'+cr.map(function(n,i){return '<div class="field"><label for="j-'+p.id+'-'+i+'">'+n+': <span id="jv-'+p.id+'-'+i+'" class="num">'+j[i]+'</span>/10</label><input type="range" min="0" max="10" step="1" value="'+j[i]+'" id="j-'+p.id+'-'+i+'" data-jv="jv-'+p.id+'-'+i+'"></div>'}).join('')+'</div>'+
+       '<div class="row"><button class="btn sm primary" data-act="jury-save" data-id="'+p.id+'">'+tr('Сохранить оценку','Save score')+'</button><button class="btn sm" data-go="project-'+p.id+'">'+tr('Открыть проект','Open project')+'</button></div></div>'}).join('')+
+       '<div class="row"><button class="btn gold" data-act="announce" data-code="'+code+'"'+(c.winner||!list.some(function(p){return p.jury})?' disabled':'')+'>'+tr('Объявить победителя','Announce the winner')+'</button><span class="small muted">'+tr('Победителем станет проект с лучшим итоговым баллом.','The project with the best total becomes the winner.')+'</span></div>':
+       '<div class="empty">'+tr('Жюри нечего оценивать: проектов пока нет.','Nothing for the jury to score: there are no projects yet.')+'</div>');
+  } else {
+    var inv=tr('Приглашаем в «','Join "')+L(c.name)+tr('». Соберите команду из 2–4 человек, опубликуйте проект до ','". Form a team of 2–4, publish your project by ')+fd(c.deadline)+tr(' и выступите в финале ',' and pitch at the final on ')+fd(c.final)+tr('. Код кубка: ','. Cup code: ')+c.code+'.';
+    var ch=tr('Наша школа провела «','Our school ran "')+L(c.name)+tr('»: ','": ')+list.length+' '+PP(list.length)+tr('. Вызываем вашу школу: запустите свой кубок за 10 минут и встретимся в городском финале.','. We challenge your school: launch your own cup in 10 minutes and meet us in the city final.');
+    var wk=[[tr('Неделя 1','Week 1'),tr('Объявление, команды по 2–4 человека, выбор проблемы','Announcement, teams of 2–4, choosing a problem')],[tr('Неделя 2','Week 2'),tr('Работа с ИИ-наставником AI Startify, черновик проекта','Work with the AI Startify mentor, project draft')],[tr('Неделя 3','Week 3'),tr('Проверка на людях: опрос 10+ человек или прототип','Testing with people: a survey of 10+ or a prototype')],[tr('Неделя 4','Week 4'),tr('Публикация до дедлайна, голосование, финал с жюри','Publishing by the deadline, voting, final with the jury')]];
+    body='<div class="two"><div class="plain" style="gap:14px"><h3>'+tr('Приглашение для учеников','Invitation for students')+'</h3><div class="copybox" id="inv-text">'+esc(inv)+'</div><div class="row"><button class="btn sm primary" data-act="copy" data-src="inv-text">'+tr('Скопировать приглашение','Copy invitation')+'</button></div>'+
+     '<h3>'+tr('План на 4 недели','4-week plan')+'</h3><div class="scroll"><table><tbody>'+wk.map(function(w){return '<tr><td style="white-space:nowrap"><b>'+w[0]+'</b></td><td>'+w[1]+'</td></tr>'}).join('')+'</tbody></table></div></div>'+
+     '<div class="plain" style="gap:14px"><h3>'+tr('Вызов другой школе','Challenge another school')+'</h3><p class="small muted">'+tr('После кубка отправьте вызов знакомому учителю. Так кубки появляются в новых школах без участия центра.','After your cup, send a challenge to a teacher you know. This is how cups reach new schools without the centre.')+'</p><div class="copybox" id="ch-text">'+esc(ch)+'</div><div class="row"><button class="btn sm" data-act="copy" data-src="ch-text">'+tr('Скопировать вызов','Copy challenge')+'</button></div>'+
+     '<h3>'+tr('Чек-лист организатора','Organiser checklist')+'</h3><ul class="chk">'+[tr('Согласие родителей собрано','Parental consent collected'),tr('Жюри из 3 человек приглашено','A jury of 3 invited'),tr('Приз и спонсор подтверждены','Prize and sponsor confirmed'),tr('Дата и место финала объявлены','Final date and venue announced')].map(function(x,i){return '<li><input type="checkbox" id="ck-'+i+'" style="width:16px;height:16px;margin-top:3px"><label for="ck-'+i+'">'+x+'</label></li>'}).join('')+'</ul></div></div>';
+  }
+  return (flash?'<div class="okmsg">'+flash+'</div>':'')+
+   '<section><div class="row">'+statusTag(c)+'<span class="tag">'+E(OT[c.type])+'</span>'+(c.mine?'<span class="tag open">'+tr('Ваш кубок','Your cup')+'</span>':'')+'</div>'+
+   '<div class="head"><div class="plain"><h1>'+E(c.name)+'</h1><p class="muted">'+E(c.org)+' · '+E(c.city)+', '+E(CN[c.country])+' · '+esc(c.ages)+tr(' лет',' y.o.')+'</p></div><span class="bigcode" aria-label="'+tr('Код кубка','Cup code')+'">'+c.code+'</span></div>'+
+   '<div class="stat"><div><b>'+(st==='open'?dl:'0')+'</b><span>'+pl(st==='open'?dl:0,'день до дедлайна','дня до дедлайна','дней до дедлайна','day to the deadline','days to the deadline')+' ('+fd(c.deadline)+')</span></div><div><b>'+nf(list.length)+'</b><span>'+PP(list.length)+'</span></div><div><b>'+fd(c.final)+'</b><span>'+tr('финал','final')+'</span></div></div>'+
+   (L(c.prize)?'<p><b>'+tr('Приз: ','Prize: ')+'</b>'+E(c.prize)+'</p>':'')+
+   '<div class="row">'+(st==='open'?'<button class="btn primary" data-go="'+(mineDraft?'edit-'+mineDraft.id:'submit-'+code)+'">'+(mineDraft?tr('Продолжить черновик','Continue draft'):tr('Подать проект','Submit a project'))+'</button>':'')+'<button class="btn" data-go="league">'+tr('Путь в лигу','Path to the league')+'</button></div></section>'+
+   '<section><div class="tabs" role="tablist">'+tabs.map(function(t){return '<button role="tab" aria-selected="'+(cupTab===t[0])+'" data-act="tab" data-tab="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>'+body+'</section>';
+}
+
+function checkPanel(p){
+  var r=precheck(p), l=level(r.score);
+  return '<div class="head"><h3>'+tr('Предпроверка','Pre-check')+'</h3><span class="score">'+r.score+'<span class="small muted">/100</span></span></div>'+
+   '<div class="meter '+(r.score>=80?'gold':r.score>=GATE?'good':'')+'"><i style="width:'+r.score+'%"></i></div>'+
+   '<p class="small">'+(l?'<b>'+tr('Уровень ','Level ')+l[1]+'.</b> '+tr('Проект можно публиковать.','The project can be published.'):tr('Для публикации нужно ','To publish you need ')+GATE+tr(' баллов. Осталось ',' points. You need ')+(GATE-r.score)+(S.lang==='en'?' more.':'.'))+'</p>'+
+   '<ul class="chk">'+r.items.map(function(i){return '<li><span class="'+(i[0]?'y':'n')+'">'+(i[0]?'✓':'○')+'</span><span>'+i[2]+(i[0]?'':'<small>'+i[3]+'</small>')+'</span><span class="num muted">+'+i[1]+'</span></li>'}).join('')+'</ul>'+
+   '<div class="note">'+tr('В демо это проверка по правилам. В продукте здесь работает VOI Engine AI Startify, который уже оценивает идеи.','In the demo this is a rule-based check. In the product this is AI Startify\'s VOI Engine, which already scores ideas.')+'</div>';
+}
+function formProject(){
+  var g=function(id){var e=document.getElementById(id);return e?e.value:''};
+  return {title:g('p-title'),team:g('p-team'),members:parseInt(g('p-members'),10)||3,problem:g('p-problem'),audience:g('p-audience'),solution:g('p-solution'),evidence:g('p-evidence'),link:g('p-link')};
+}
+function vSubmit(code,pid){
+  var p=pid?proj(pid):null; if(p) code=p.cup; var c=cup(code); if(!c) return vNotFound();
+  var v=p||{title:'',team:'',members:3,problem:'',audience:'',solution:'',evidence:'',link:''};
+  var ta=function(id,label,hint,val,ph){return '<div class="field"><label for="'+id+'">'+label+'</label><textarea id="'+id+'" maxlength="400" placeholder="'+esc(ph)+'">'+esc(R(val))+'</textarea><small>'+hint+'</small></div>'};
+  return '<section><p class="small"><button class="btn sm" data-go="cup-'+code+'">← '+E(c.name)+'</button></p><h1>'+tr('Проект команды','Team project')+'</h1>'+
+   '<p class="muted">'+tr('Шесть полей. Уже есть проект, сделанный самостоятельно? Просто опишите его здесь.','Six fields. Already built a project on your own? Just describe it here.')+'</p></section>'+
+   '<div class="two"><form id="project-form" class="card" data-code="'+code+'" data-pid="'+(pid||'')+'">'+
+   '<div class="f2"><div class="field"><label for="p-title">'+tr('Название проекта','Project name')+'</label><input type="text" id="p-title" maxlength="40" value="'+esc(R(v.title))+'"></div>'+
+   '<div class="field"><label for="p-team">'+tr('Название команды','Team name')+'</label><input type="text" id="p-team" maxlength="40" value="'+esc(v.team)+'"></div>'+
+   '<div class="field"><label for="p-members">'+tr('Участников','Members')+'</label><input type="number" id="p-members" min="1" max="6" value="'+v.members+'"></div></div>'+
+   ta('p-problem',tr('Проблема','Problem'),tr('У кого она и как часто возникает. Добавьте число.','Who has it and how often. Add a number.'),v.problem,tr('Например: 30 из 45 опрошенных одноклассников…','For example: 30 of 45 surveyed classmates…'))+
+   ta('p-audience',tr('Для кого','Audience'),tr('Возраст, класс, город.','Age, grade, city.'),v.audience,tr('Например: ученики 8–9 классов в Караганде','For example: students in grades 8–9 in Karaganda'))+
+   ta('p-solution',tr('Решение','Solution'),tr('Как это работает по шагам.','How it works, step by step.'),v.solution,'')+
+   ta('p-evidence',tr('Что уже сделано','What is done so far'),tr('Опрос, прототип, тест. С результатом в цифрах.','A survey, a prototype, a test. With a result in numbers.'),v.evidence,'')+
+   '<div class="field"><label for="p-link">'+tr('Ссылка на прототип или видео (необязательно)','Link to a prototype or video (optional)')+'</label><input type="url" id="p-link" placeholder="https://" value="'+esc(v.link||'')+'"></div>'+
+   '<label class="check"><input type="checkbox" id="p-consent"'+(v.consent?' checked':'')+'><span>'+tr('Участникам младше 18 лет: согласие родителей передано организатору кубка.','For participants under 18: parental consent has been given to the cup organiser.')+'</span></label>'+
+   '<p class="small" id="p-err" style="color:var(--warn)" hidden></p>'+
+   '<div class="row"><button class="btn primary" type="submit" id="p-publish">'+tr('Опубликовать','Publish')+'</button><button class="btn" type="button" data-act="draft">'+tr('Сохранить черновик','Save draft')+'</button></div></form>'+
+   '<div class="card" id="check-panel">'+checkPanel(v)+'</div></div>';
+}
+
+function vProject(id){
+  var p=proj(id); if(!p) return vNotFound(); var c=cup(p.cup), r=precheck(p), win=c.winner===p.id, pl=place(p);
+  var share=tr('Наш проект «','Our project "')+L(p.title)+tr('» участвует в «','" is in "')+L(c.name)+tr('». Поддержите нас голосом. Код кубка: ','". Support us with your vote. Cup code: ')+c.code+'.';
+  return '<section><p class="small"><button class="btn sm" data-go="cup-'+c.code+'">← '+E(c.name)+'</button></p>'+
+   '<div class="row">'+(p.status==='draft'?'<span class="tag warn">'+tr('Черновик, не опубликован','Draft, not published')+'</span>':lvlTag(r.score))+(win?'<span class="tag done">'+tr('Победитель кубка','Cup winner')+'</span>':'')+(p.status==='published'&&pl?'<span class="tag">'+tr('Место ','Place ')+pl+'</span>':'')+'</div>'+
+   '<h1>'+E(p.title)+'</h1><p class="muted">'+E(p.team)+' · '+p.members+' '+tr('чел.','members')+' · '+E(c.org)+', '+E(c.city)+'</p></section>'+
+   '<div class="two"><div class="card"><dl>'+
+   '<div><dt>'+tr('Проблема','Problem')+'</dt><dd>'+E(p.problem)+'</dd></div><div><dt>'+tr('Для кого','Audience')+'</dt><dd>'+E(p.audience)+'</dd></div>'+
+   '<div><dt>'+tr('Решение','Solution')+'</dt><dd>'+E(p.solution)+'</dd></div><div><dt>'+tr('Что уже сделано','What is done so far')+'</dt><dd>'+(E(p.evidence)||'—')+'</dd></div>'+
+   (p.link?'<div><dt>'+tr('Ссылка','Link')+'</dt><dd class="mono small">'+esc(p.link)+'</dd></div>':'')+'</dl></div>'+
+   '<div class="plain" style="gap:14px">'+(p.status==='published'?
+     '<div class="card"><div class="vote"><span class="score">'+nf(p.votes)+'</span><button class="btn primary" data-act="vote" data-id="'+p.id+'"'+(S.voted[p.id]?' disabled':'')+'>'+(S.voted[p.id]?tr('Голос учтён','Voted'):tr('Голосовать','Vote'))+'</button></div><span class="small muted">'+tr('голосов зрителей. В итог идёт не больше 100.','audience votes. At most 100 count towards the total.')+'</span>'+
+     '<div class="scroll"><table><tbody><tr><td>'+tr('Предпроверка','Pre-check')+'</td><td class="r">'+r.score+'</td></tr><tr><td>'+tr('Жюри','Jury')+'</td><td class="r">'+(p.jury?juryAvg(p):'—')+'</td></tr><tr><td><b>'+tr('Итог','Total')+'</b></td><td class="r"><b>'+total(p)+'</b></td></tr></tbody></table></div></div>'+
+     '<div class="plain"><h3>'+tr('Поделиться','Share')+'</h3><div class="copybox" id="sh-text">'+esc(share)+'</div><div class="row"><button class="btn sm" data-act="copy" data-src="sh-text">'+tr('Скопировать текст','Copy text')+'</button><button class="btn sm gold" data-go="cert-'+p.id+'">'+tr('Сертификат','Certificate')+'</button></div></div>'
+     :'<div class="card" id="check-panel">'+checkPanel(p)+'</div><button class="btn primary" data-go="edit-'+p.id+'">'+tr('Продолжить и опубликовать','Continue and publish')+'</button>')+
+   '</div></div>';
+}
+
+function vCert(id){
+  var p=proj(id); if(!p||p.status!=='published') return vNotFound(); var c=cup(p.cup), win=c.winner===p.id, pl=place(p), fin=!win&&c.winner&&pl<=3;
+  var kind=win?tr('Победитель кубка','Cup winner'):fin?tr('Финалист кубка','Cup finalist'):tr('Участник кубка','Cup participant');
+  return '<section><p class="small"><button class="btn sm" data-go="project-'+p.id+'">← '+E(p.title)+'</button></p>'+
+   '<div class="cert"><span class="eyebrow">Founder Cup Anywhere · '+tr('демо-сертификат','demo certificate')+'</span><h1>'+kind+'</h1>'+
+   '<p>'+tr('Команда','Team')+' <b>'+E(p.team)+'</b> ('+p.members+' '+tr('чел.','members')+')<br>'+tr('опубликовала проект','published the project')+' <b>«'+E(p.title)+'»</b><br>'+tr('в кубке','in')+' <b>'+E(c.name)+'</b>, '+E(c.city)+', '+E(CN[c.country])+'</p>'+
+   '<div class="row" style="justify-content:center">'+lvlTag(precheck(p).score)+'<span class="tag">'+tr('Итог ','Total ')+total(p)+'</span><span class="tag">'+tr('Финал ','Final ')+fd(c.final)+'</span></div>'+
+   (win?'<div class="okmsg" style="text-align:left"><b>'+tr('Путёвка в городской финал.','Ticket to the city final.')+'</b> '+tr('Следующий этап: ','Next stage: ')+E(c.city)+tr(', затем национальный финал: ',', then the national final: ')+E(CN[c.country])+'.</div>':'')+
+   '<span class="id">'+tr('Код проверки: ','Verification code: ')+certId(p)+'</span>'+
+   '<p class="small muted">'+tr('По этому коду вуз или работодатель проверяет сертификат на странице лиги. Сертификат подтверждает опубликованный проект, а не преимущество при поступлении.','A university or employer checks the certificate with this code on the league page. It confirms a published project, not an admissions advantage.')+'</p></div></section>';
+}
+
+function vLeague(){
+  var by={}; S.cups.forEach(function(c){var k=c.country; by[k]=by[k]||{cups:0,pr:0,win:0}; by[k].cups++; by[k].pr+=cupProjects(c.code).length; if(c.winner)by[k].win++});
+  var schools=S.cups.map(function(c){var l=ranked(c.code);return {c:c,n:l.length,best:l.length?total(l[0]):0}}).sort(function(a,b){return b.n-a.n||b.best-a.best});
+  var winners=S.cups.filter(function(c){return c.winner});
+  return '<section><h1>'+tr('Лига','League')+'</h1><p class="muted">'+tr('Один бренд, сотни организаторов. Каждый кубок даёт путёвку на уровень выше.','One brand, hundreds of organisers. Every cup gives a ticket one level up.')+'</p>'+pathHtml()+'</section>'+
+   '<section><h2>'+tr('Страны','Countries')+'</h2><div class="scroll"><table><thead><tr><th>'+tr('Страна','Country')+'</th><th class="r">'+tr('Кубков','Cups')+'</th><th class="r">'+tr('Проектов','Projects')+'</th><th class="r">'+tr('Путёвок в финал','Final tickets')+'</th></tr></thead><tbody>'+
+   Object.keys(by).sort(function(a,b){return by[b].pr-by[a].pr}).map(function(k){return '<tr><td>'+E(CN[k])+'</td><td class="r">'+by[k].cups+'</td><td class="r">'+by[k].pr+'</td><td class="r">'+by[k].win+'</td></tr>'}).join('')+'</tbody></table></div></section>'+
+   '<section><h2>'+tr('Рейтинг организаторов','Organiser ranking')+'</h2><p class="small muted">'+tr('Место определяют число опубликованных проектов и лучший итоговый балл. Это мотив для школы провести кубок.','Rank is set by the number of published projects and the best total. This is the school\'s reason to run a cup.')+'</p><div class="scroll"><table><thead><tr><th>#</th><th>'+tr('Организатор','Organiser')+'</th><th>'+tr('Город','City')+'</th><th class="r">'+tr('Проектов','Projects')+'</th><th class="r">'+tr('Лучший балл','Best total')+'</th></tr></thead><tbody>'+
+   schools.map(function(s,i){return '<tr><td class="num">'+(i+1)+'</td><td><button class="btn sm" data-go="cup-'+s.c.code+'">'+E(s.c.org)+'</button></td><td>'+E(s.c.city)+', '+E(CN[s.c.country])+'</td><td class="r">'+s.n+'</td><td class="r">'+(s.best||'—')+'</td></tr>'}).join('')+'</tbody></table></div></section>'+
+   '<section><h2>'+tr('Путёвки в следующий этап','Tickets to the next stage')+'</h2>'+(winners.length?'<div class="grid">'+winners.map(function(c){var p=proj(c.winner);return '<div class="card"><span class="tag done">'+tr('Победитель','Winner')+'</span><h3>'+E(p.title)+'</h3><p class="small muted">'+E(p.team)+' · '+E(c.name)+'</p><div class="row"><button class="btn sm" data-go="cert-'+p.id+'">'+tr('Сертификат','Certificate')+'</button></div></div>'}).join('')+'</div>':'<div class="empty">'+tr('Путёвок пока нет.','No tickets yet.')+'</div>')+'</section>'+
+   '<section style="max-width:560px"><h2>'+tr('Проверка сертификата','Verify a certificate')+'</h2><form id="verify-form"><div class="field"><label for="v-code">'+tr('Код проверки','Verification code')+'</label><input type="text" id="v-code" class="mono" placeholder="FCA-AST4MX-B1" autocomplete="off"></div><div class="row"><button class="btn" type="submit">'+tr('Проверить','Verify')+'</button></div><p class="small" id="v-out" hidden></p></form></section>';
+}
+
+var calc={cups:500,ppc:20,team:3,viewers:6,cost:30000};
+function calcOut(){
+  var pr=calc.cups*calc.ppc, part=pr*calc.team, vw=pr*calc.viewers, users=part+vw, cost=calc.cups*calc.cost, cpp=pr?Math.round(cost/pr):0;
+  var bar=function(v,goal){var w=Math.min(100,Math.round(v/goal*100));return '<div class="meter '+(v>=goal?'good':'')+'"><i style="width:'+w+'%"></i></div><span class="small muted num">'+w+'% '+tr('от цели ','of the goal of ')+nf(goal)+'</span>'};
+  return '<div class="stat"><div><b>'+nf(pr)+'</b><span>'+tr('опубликованных проектов','published projects')+'</span></div><div><b>'+nf(users)+'</b><span>'+tr('пользователей','users')+'</span></div><div><b>'+nf(cpp)+' ₸</b><span>'+tr('на один проект','per project')+'</span></div></div>'+
+   '<div class="plain"><b>'+tr('Проекты','Projects')+'</b>'+bar(pr,10000)+'</div><div class="plain"><b>'+tr('Пользователи','Users')+'</b>'+bar(users,100000)+'<span class="small muted">'+nf(part)+tr(' участников + ',' participants + ')+nf(vw)+tr(' зрителей, вошедших ради голосования',' viewers who signed in to vote')+'</span></div>'+
+   '<div class="plain"><b>'+tr('Расходы платформы','Platform costs')+'</b><span class="num">'+nf(cost)+' ₸ '+tr('всего','total')+'</span><span class="small muted">'+tr('Для сравнения: около 16 000 ₸ за проект сейчас. Это оценка команды по допущению (9 млн ₸ на привлечение и 567 проектов), а не данные AI Startify.','For comparison: about 16,000 ₸ per project today. This is the team\'s estimate from an assumption (9M ₸ on acquisition and 567 projects), not AI Startify data.')+'</span></div>';
+}
+function vImpact(){
+  var sl=function(k,label,min,max,step,unit){return '<div class="field"><label for="k-'+k+'">'+label+': <b class="num" id="kv-'+k+'">'+nf(calc[k])+'</b>'+unit+'</label><input type="range" id="k-'+k+'" data-calc="'+k+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+calc[k]+'"></div>'};
+  return '<section><h1>'+tr('Путь к 10 000 проектов','The path to 10,000 projects')+'</h1><p class="muted">'+tr('Все значения ниже являются допущениями. Реальные средние покажут первые 10 кубков пилота.','Every value below is an assumption. The first 10 pilot cups will show the real averages.')+'</p></section>'+
+   '<div class="two"><div class="card"><div class="row"><button class="btn sm" data-act="scen" data-v="10">'+tr('Осторожный: 10 проектов на кубок','Cautious: 10 projects per cup')+'</button><button class="btn sm" data-act="scen" data-v="20">'+tr('Базовый: 20','Base: 20')+'</button><button class="btn sm" data-act="scen" data-v="30">'+tr('Смелый: 30','Bold: 30')+'</button></div>'+
+   sl('cups',tr('Кубков за год','Cups per year'),10,1500,10,'')+sl('ppc',tr('Опубликованных проектов на кубок','Published projects per cup'),5,40,1,'')+sl('team',tr('Человек в команде','People per team'),1,5,1,'')+sl('viewers',tr('Зрителей на проект, вошедших для голосования','Viewers per project who sign in to vote'),0,15,1,'')+sl('cost',tr('Расходы платформы на кубок','Platform cost per cup'),0,200000,5000,' ₸')+
+   '<p class="small muted">'+tr('В расходах на кубок: поддержка организатора, ИИ-проверка, сертификаты. Организаторам не платят, призы дают спонсоры.','Cost per cup covers organiser support, AI checks and certificates. Organisers are not paid; sponsors provide prizes.')+'</p></div>'+
+   '<div class="card" id="calc-out">'+calcOut()+'</div></div>'+
+   '<section><h2>'+tr('Сколько кубков нужно для 10 000 проектов','How many cups 10,000 projects take')+'</h2><div class="scroll"><table><thead><tr><th>'+tr('Проектов на кубок','Projects per cup')+'</th><th class="r">'+tr('Кубков','Cups')+'</th><th>'+tr('Что это значит','What it means')+'</th></tr></thead><tbody>'+
+   '<tr><td>10</td><td class="r">1 000</td><td>'+tr('Маленькие школьные кубки, один класс','Small school cups, one class')+'</td></tr><tr><td>20</td><td class="r">500</td><td>'+tr('Параллель или два класса','A year group or two classes')+'</td></tr><tr><td>30</td><td class="r">334</td><td>'+tr('Вся школа или городской клуб','A whole school or a city club')+'</td></tr></tbody></table></div></section>';
+}
+function vNotFound(){return '<section><div class="empty"><b>'+tr('Страница не найдена','Page not found')+'</b><button class="btn" data-go="home">'+tr('На главную','Go to the home page')+'</button></div></section>'}
+
+function render(){
+  var r=route, html, nav='home';
+  if(r==='home'||!r) html=vHome();
+  else if(r==='cups'){html=vCups();nav='cups'}
+  else if(r==='create'){html=vCreate();nav='create'}
+  else if(r==='join'){html=vJoin();nav='join'}
+  else if(r==='league'){html=vLeague();nav='league'}
+  else if(r==='impact'){html=vImpact();nav='impact'}
+  else if(r.indexOf('cup-')===0){html=vCup(r.slice(4));nav='cups'}
+  else if(r.indexOf('submit-')===0){html=vSubmit(r.slice(7));nav='cups'}
+  else if(r.indexOf('edit-')===0){html=vSubmit(null,r.slice(5));nav='cups'}
+  else if(r.indexOf('project-')===0){html=vProject(r.slice(8));nav='cups'}
+  else if(r.indexOf('cert-')===0){html=vCert(r.slice(5));nav='league'; if(!S.tour.cert){S.tour.cert=1;save()}}
+  else html=vNotFound();
+  document.getElementById('app').innerHTML=html; flash='';
+  var items=[['cups',tr('Кубки','Cups')],['create',tr('Запустить','Launch')],['join',tr('Войти по коду','Join')],['league',tr('Лига','League')],['impact',tr('Цели','Goals')]];
+  document.getElementById('nav').innerHTML=items.map(function(i){return '<button data-go="'+i[0]+'"'+(nav===i[0]?' aria-current="page"':'')+'>'+i[1]+'</button>'}).join('');
+  document.getElementById('lang-ru').setAttribute('aria-pressed',S.lang==='ru'); document.getElementById('lang-en').setAttribute('aria-pressed',S.lang==='en');
+  document.getElementById('ribbon').textContent=tr('Прототип команды для хакатона AI Startify Global Growth Challenge. Не официальный продукт AI Startify. Все кубки, команды, проекты и цифры здесь являются демо-данными.','A team prototype for the AI Startify Global Growth Challenge hackathon. Not an official AI Startify product. All cups, teams, projects and numbers here are demo data.');
+  document.getElementById('foot').textContent=tr('Founder Cup Anywhere · концепт. Данные хранятся только в этом браузере.','Founder Cup Anywhere · concept. Data is stored only in this browser.');
+  document.getElementById('reset-btn').textContent=tr('Сбросить демо','Reset demo');
+  document.documentElement.lang=S.lang;
+}
+
+/* events */
+function newCode(){var a='ABCDEFGHJKMNPQRSTUVWXYZ23456789',c;do{c='';for(var i=0;i<6;i++)c+=a[Math.floor(Math.random()*a.length)]}while(cup(c));return c}
+function saveProject(form,publish){
+  var code=form.getAttribute('data-code'), pid=form.getAttribute('data-pid'), v=formProject(), err=document.getElementById('p-err');
+  var consent=document.getElementById('p-consent').checked, sc=precheck(v).score, msg='';
+  if(!v.title.trim()||!v.team.trim()) msg=tr('Укажите название проекта и команды.','Enter the project and team names.');
+  else if(publish&&!consent) msg=tr('Для публикации подтвердите согласие родителей.','To publish, confirm parental consent.');
+  else if(publish&&sc<GATE) msg=tr('Для публикации нужно ','To publish you need ')+GATE+tr(' баллов предпроверки. Сейчас ',' pre-check points. You have ')+sc+'.';
+  if(msg){err.textContent=msg;err.hidden=false;return}
+  var p=pid?proj(pid):null;
+  if(!p){p={id:'u'+(S.seq++),cup:code,votes:0,jury:null,mine:true};S.projects.push(p)}
+  p.title=v.title.trim();p.team=v.team.trim();p.members=v.members;p.problem=v.problem.trim();p.audience=v.audience.trim();p.solution=v.solution.trim();p.evidence=v.evidence.trim();p.link=v.link.trim();p.consent=consent;
+  p.status=publish?'published':'draft';
+  if(publish){S.tour.published=1;flash=tr('Проект опубликован. Команда участвует в кубке.','The project is published. The team is in the cup.')}
+  save(); if(publish){cupTab='projects';go('project-'+p.id);toast(tr('Проект опубликован','Project published'))} else {go('project-'+p.id);toast(tr('Черновик сохранён','Draft saved'))}
+}
+document.addEventListener('click',function(e){
+  var t=e.target.closest('[data-go],[data-act],[data-lang]'); if(!t) return;
+  if(t.hasAttribute('data-lang')){S.lang=t.getAttribute('data-lang');save();render();return}
+  if(t.hasAttribute('data-go')){if(t.hasAttribute('data-tab'))cupTab=t.getAttribute('data-tab'); else if(t.getAttribute('data-go').indexOf('cup-')===0&&route.indexOf('cup-')!==0)cupTab='projects'; go(t.getAttribute('data-go'));return}
+  var a=t.getAttribute('data-act'), p;
+  if(a==='tab'){cupTab=t.getAttribute('data-tab');render()}
+  else if(a==='filter'){cupFilter=t.getAttribute('data-k');render()}
+  else if(a==='vote'){p=proj(t.getAttribute('data-id'));if(p&&!S.voted[p.id]){p.votes++;S.voted[p.id]=1;S.tour.voted=1;save();render();toast(tr('Голос учтён','Vote counted'))}}
+  else if(a==='copy'){copy(document.getElementById(t.getAttribute('data-src')).textContent)}
+  else if(a==='draft'){saveProject(document.getElementById('project-form'),false)}
+  else if(a==='jury-save'){p=proj(t.getAttribute('data-id'));p.jury=[0,1,2].map(function(i){return parseInt(document.getElementById('j-'+p.id+'-'+i).value,10)});save();render();toast(tr('Оценка сохранена','Score saved'))}
+  else if(a==='announce'){var c=cup(t.getAttribute('data-code')),l=ranked(c.code).filter(function(x){return x.jury});if(l.length){c.winner=l[0].id;S.tour.judged=1;save();render();toast(tr('Победитель объявлен','Winner announced'))}}
+  else if(a==='scen'){calc.ppc=parseInt(t.getAttribute('data-v'),10);calc.cups=Math.ceil(10000/calc.ppc/10)*10;render()}
+  else if(a==='reset'){try{localStorage.removeItem(LS)}catch(x){} S=seed();cupTab='projects';go('home');toast(tr('Демо сброшено','Demo reset'))}
+});
+document.addEventListener('input',function(e){
+  var t=e.target;
+  if(t.closest('#project-form')){var cp=document.getElementById('check-panel');if(cp)cp.innerHTML=checkPanel(formProject());var pe=document.getElementById('p-err');if(pe)pe.hidden=true}
+  else if(t.hasAttribute('data-calc')){var k=t.getAttribute('data-calc');calc[k]=parseFloat(t.value);document.getElementById('kv-'+k).textContent=nf(calc[k]);document.getElementById('calc-out').innerHTML=calcOut()}
+  else if(t.hasAttribute('data-jv')){document.getElementById(t.getAttribute('data-jv')).textContent=t.value}
+});
+document.addEventListener('submit',function(e){
+  var f=e.target; e.preventDefault();
+  if(f.id==='join-form'){var code=document.getElementById('join-code').value.trim().toUpperCase(),c=cup(code),er=document.getElementById('join-err');
+    if(c){cupTab='projects';go('cup-'+code)}else{er.textContent=tr('Кубок с таким кодом не найден. Проверьте код у организатора.','No cup with this code. Check the code with your organiser.');er.hidden=false}}
+  else if(f.id==='create-form'){var g=function(id){return document.getElementById(id).value.trim()};
+    var nc={code:newCode(),name:g('c-name'),org:g('c-org'),type:g('c-type'),city:g('c-city'),country:g('c-country'),deadline:g('c-deadline'),final:g('c-final'),ages:g('c-ages')||'14–17',prize:g('c-prize'),winner:null,mine:true};
+    if(nc.final<nc.deadline)nc.final=nc.deadline;
+    S.cups.unshift(nc);S.tour.created=1;save();cupTab='org';flash=tr('Кубок создан. Код для команд: ','The cup is created. Code for teams: ')+'<b class="mono">'+nc.code+'</b>. '+tr('Ниже приглашение и план на 4 недели.','The invitation and the 4-week plan are below.');go('cup-'+nc.code)}
+  else if(f.id==='project-form'){saveProject(f,true)}
+  else if(f.id==='verify-form'){var q=document.getElementById('v-code').value.trim().toUpperCase(),out=document.getElementById('v-out'),hit=S.projects.filter(function(p){return p.status==='published'&&certId(p)===q})[0];
+    out.hidden=false; if(hit){out.style.color='var(--good)';out.innerHTML=tr('Сертификат действителен: ','Certificate is valid: ')+'<b>'+E(hit.title)+'</b>, '+E(hit.team)+', '+E(cup(hit.cup).name)+'. <button class="btn sm" type="button" data-go="cert-'+hit.id+'">'+tr('Открыть','Open')+'</button>'}else{out.style.color='var(--warn)';out.textContent=tr('Сертификат с таким кодом не найден.','No certificate with this code.')}}
+});
+
+var h0=''; try{h0=location.hash.slice(1)}catch(e){}
+route=h0||'home'; render();
+})();
+</script>
