@@ -1,3 +1,5 @@
+> Проект для RecGenesis Hackathon (ArtTech, «Тот день») лежит в папке [`diary/`](diary/README.md).
+
 # Founder Cup Anywhere
 
 Прототип для хакатона AI Startify Global Growth Challenge, направление 2 (Startup Creation & Activation).
